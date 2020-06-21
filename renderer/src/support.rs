@@ -117,7 +117,6 @@ impl Gl {
             self.gl.ClearColor(color[0],color[1],color[2],color[3]);
             self.gl.Clear(gl::COLOR_BUFFER_BIT);
             self.gl.UseProgram(self.shader_program);
-            self.get_active_uniforms();
             self.get_error();
 
             for m in model.iter(){
@@ -127,25 +126,19 @@ impl Gl {
     }
     unsafe fn draw_model(&self,model: &Model){
             let m = nalgebra::one::<Matrix4<f32>>();
-            println!("{}",m);
             let m_ptr = m.as_slice().as_ptr();
-            println!("shader program: {}",self.shader_program);
             let model_location = self.gl.GetUniformLocation(self.shader_program,CString::new("model").expect("failed??").as_ptr() as *const i8);
-            println!("model location {}",model_location);
             self.gl.UniformMatrix4fv(model_location,1,gl::FALSE,m_ptr);
 
 
             let m2 = nalgebra::one::<Matrix4<f32>>();
 
             let view_location = self.gl.GetUniformLocation(self.shader_program,CString::new("view").expect("failed??").as_ptr() as *const i8);
-            println!("view location {}",view_location);
             self.gl.UniformMatrix4fv(view_location,1,gl::FALSE,m2.as_slice().as_ptr());
 
             let m3 = nalgebra::one::<Matrix4<f32>>();
             let position_location = self.gl.GetUniformLocation(self.shader_program,CString::new("position_mat").expect("failed??").as_ptr() as *const i8);
-            println!("position location: {}",position_location);
             self.gl.UniformMatrix4fv(position_location,1,gl::FALSE,m3.as_slice().as_ptr());
-            println!("{}",m);
             self.get_error();
 
 

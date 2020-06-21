@@ -6,6 +6,17 @@ mod planets{
     use gl_renderer::Model;
     use nalgebra::Vector3;
     create_entity!(mass:f64,position:Vector3<f64>,velocity:Vector3<f64>,draw:Model); 
+    pub struct PrintPosition{
+
+    }
+    impl BehaviorComponent for PrintPosition{
+        fn update(&mut self,id:ID,entity_namager: &mut std::collections::HashMap<ID,Data>){
+            let data = entity_namager.get(&id).unwrap();
+            println!("position: {}",data.position().unwrap());
+
+        }
+
+    }
 }
 struct State {
     planet_system:planets::EntityManager,
@@ -15,7 +26,7 @@ impl State{
         let mut s = State{
             planet_system:planets::EntityManager::new(),
         };
-        s.planet_system.new_entity(planets::Entity::new(||{Some(1.0)},||{Some(Vector3::new(0.0,0.0,0.0))},||{Some(Vector3::new(0.0,0.0,0.0))},||None,vec![]));
+        s.planet_system.new_entity(planets::Data::new(||{Some(1.0)},||{Some(Vector3::new(0.0,0.0,0.0))},||{Some(Vector3::new(0.0,0.0,0.0))},||None),vec![Box::new(planets::PrintPosition{})]);
         return s;
 
     }

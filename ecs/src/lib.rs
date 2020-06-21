@@ -28,7 +28,7 @@ macro_rules! create_entity {
         }
 
         #[allow(dead_code)]
-        trait BehaviorComponent{
+        pub trait BehaviorComponent{
             /// For now the user promises not to update id's other then the provided id
             fn update(&mut self,id:ID,entity_namager: &mut std::collections::HashMap<ID,Data>);
         }
