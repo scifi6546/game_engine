@@ -45,16 +45,13 @@ mod planets {
             data.position(pos);
         }
     }
-    pub struct Renderable{}
-    impl BehaviorComponent for Renderable{
+    pub struct Renderable {}
+    impl BehaviorComponent for Renderable {
         fn update(&mut self, data: &mut DataGetter) {
             let pos = data.get_self().position.unwrap();
-            let model = Model::cube(Vector3::new(pos.x as f32,pos.y as f32,pos.z as f32));
+            let model = Model::cube(Vector3::new(pos.x as f32, pos.y as f32, pos.z as f32));
             data.model(model);
-        
-        
         }
-
     }
 }
 struct State {
@@ -74,7 +71,7 @@ impl State {
             ),
             vec![
                 Box::new(planets::Gravity {}),
-                Box::new(planets::Renderable{}),
+                Box::new(planets::Renderable {}),
             ],
         );
         s.planet_system.new_entity(
@@ -86,7 +83,7 @@ impl State {
             ),
             vec![
                 Box::new(planets::Gravity {}),
-                Box::new(planets::Renderable{}),
+                Box::new(planets::Renderable {}),
             ],
         );
         s.planet_system.new_entity(
@@ -98,7 +95,7 @@ impl State {
             ),
             vec![
                 Box::new(planets::Gravity {}),
-                Box::new(planets::Renderable{}),
+                Box::new(planets::Renderable {}),
             ],
         );
         return s;
@@ -109,14 +106,13 @@ impl Renderable for State {
     fn render(&mut self) -> Vec<Model> {
         self.planet_system.process();
         let mut v = vec![];
-        for (id,data) in self.planet_system.iter(){
+        for (id, data) in self.planet_system.iter() {
             let model = data.model();
-            if model.is_some(){
+            if model.is_some() {
                 v.push(model.unwrap());
-
             }
         }
-        return v
+        return v;
     }
 }
 fn main() {
