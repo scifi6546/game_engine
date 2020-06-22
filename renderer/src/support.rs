@@ -1,7 +1,7 @@
 mod model;
 pub use model::Model;
 use glutin::{self, PossiblyCurrent};
-use nalgebra::{Matrix4};
+use nalgebra::{Matrix,Matrix4};
 use std::ffi::CString;
 
 use std::ffi::CStr;
@@ -125,10 +125,10 @@ impl Gl {
         }
     }
     unsafe fn draw_model(&self,model: &Model){
-            let m = nalgebra::one::<Matrix4<f32>>();
-            let m_ptr = m.as_slice().as_ptr();
+            let translation_mat:Matrix4<f32> = Matrix::new_translation(&model.position);
+            let translation_ptr = translation_mat.as_slice().as_ptr();
             let model_location = self.gl.GetUniformLocation(self.shader_program,CString::new("model").expect("failed??").as_ptr() as *const i8);
-            self.gl.UniformMatrix4fv(model_location,1,gl::FALSE,m_ptr);
+            self.gl.UniformMatrix4fv(model_location,1,gl::FALSE,translation_ptr);
 
 
             let m2 = nalgebra::one::<Matrix4<f32>>();

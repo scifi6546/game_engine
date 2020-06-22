@@ -7,6 +7,7 @@ macro_rules! create_entity {
     ($($element: ident: $ty: ty),*) => {
     
         #[allow(dead_code)]
+        #[derive(Clone)]
         pub struct Data{
             $($element: Option<$ty>),*
         }
@@ -30,7 +31,7 @@ macro_rules! create_entity {
         #[allow(dead_code)]
         pub trait BehaviorComponent{
             /// For now the user promises not to update id's other then the provided id
-            fn update(&mut self,id:ID,entity_namager: &mut std::collections::HashMap<ID,Data>);
+            fn update(&mut self,data:&mut DataGetter);
         }
         type ID = u32;
         #[allow(dead_code)]
@@ -38,30 +39,46 @@ macro_rules! create_entity {
             data: Data,
             behavior: Vec<Box<dyn BehaviorComponent>>,
         }
-        //impl Entity{
-        //    #[allow(dead_code)] 
-        //    pub fn new($($element:fn()->Option<$ty>),*,behavior:Vec<Box<dyn BehaviorComponent>>)->Self{
-        //        Self{
-        //            data:Data::new($($element),*),
-        //            behavior: behavior
-        //        }
-        //    }
-        //    pub fn search(&mut self,manager: &EntityManager){
-        //        for b in self.behavior.iter_mut(){
-        //            b.search(&self.data,manager)
-        //        }
+        pub struct DataGetter<'a>{
+            data: &'a mut std::collections::HashMap<ID,Data>,
+            self_id: ID,
+        }
+        impl<'a> DataGetter<'a>{
+            pub fn get_self(&self)->&Data{
+                self.data.get(&self.self_id).unwrap()
+            }
+            pub fn get_other(&self,id:ID)->Option<Data>{
+                if id!=self.self_id{
+                    let t = self.data.get(&id).unwrap().clone();
+                    Some(t)
+                }else{
+                    None
 
-        //    }
-        //    pub fn update(&mut self){
-        //        for b in self.behavior.iter(){
-        //            b.update(&mut self.data)
-        //        }
-        //    }
-        //}
+                }
+
+            }
+            pub fn self_id(&self)->ID{
+                self.self_id
+
+            }
+
+            pub fn keys(&self)->std::collections::hash_map::Keys<'_, u32, Data>{
+                self.data.keys()
+
+            }
+            $(
+                #[allow(dead_code)]
+                pub fn $element (&mut self,e: $ty){
+                    let mut d = self.data.get_mut(&self.self_id).unwrap();
+                    d.$element = Some(e);
+            }
+            )*
+
+        }
         #[allow(dead_code)]
         pub struct EntityManager{
             data_elements: std::collections::HashMap<ID,Data>,
-            behavior: std::collections::HashMap<ID,Vec<Box<dyn BehaviorComponent>>>
+            behavior: std::collections::HashMap<ID,Vec<Box<dyn BehaviorComponent>>>,
         }
         use rand::Rng;
         impl EntityManager{
@@ -75,6 +92,10 @@ macro_rules! create_entity {
             #[allow(dead_code)]
             fn get_entity(&self,id:ID)->Option<&Data>{
                 self.data_elements.get(&id)
+            }
+            pub fn iter(&self)->std::collections::hash_map::Iter<'_, u32,Data>{
+                self.data_elements.iter()
+
             }
             ///Function to get elements in Entity With id
             $(
@@ -111,7 +132,7 @@ macro_rules! create_entity {
             pub fn process(&mut self){
                 for (id,b_vec) in self.behavior.iter_mut(){
                     for b in b_vec.iter_mut(){
-                        b.update(id.clone(),&mut self.data_elements);
+                        b.update(&mut DataGetter{data:&mut self.data_elements,self_id:id.clone()});
                     }
                 }
             }
