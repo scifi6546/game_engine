@@ -46,10 +46,6 @@ fn _run<State:Renderable+'static>(
     let mut state = state_factory();
     event_loop.run(move |event, _, control_flow| {
         let models = state.render();
-        color += 0.000123;
-        if color > 1.0 {
-            color = 0.0
-        }
         gl.draw_frame(
             [color, color, color, 1.0],
             models

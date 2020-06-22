@@ -131,10 +131,10 @@ impl Gl {
             self.gl.UniformMatrix4fv(model_location,1,gl::FALSE,translation_ptr);
 
 
-            let m2 = nalgebra::one::<Matrix4<f32>>();
+            let camera: Matrix4<f32> = nalgebra::Perspective3::new(1.0,3.14/4.0,1.0,1000.0).into_inner();
 
             let view_location = self.gl.GetUniformLocation(self.shader_program,CString::new("view").expect("failed??").as_ptr() as *const i8);
-            self.gl.UniformMatrix4fv(view_location,1,gl::FALSE,m2.as_slice().as_ptr());
+            self.gl.UniformMatrix4fv(view_location,1,gl::FALSE,camera.as_slice().as_ptr());
 
             let m3 = nalgebra::one::<Matrix4<f32>>();
             let position_location = self.gl.GetUniformLocation(self.shader_program,CString::new("position_mat").expect("failed??").as_ptr() as *const i8);
@@ -191,7 +191,7 @@ uniform mat4 position_mat;
 varying vec3 v_color;
 
 void main() {
-    gl_Position = model*view*position_mat*vec4(position, 1.0);
+    gl_Position = view*position_mat*model*vec4(position, 1.0);
     v_color = vec3(1.0,0.5,1.0);
 }
 \0";

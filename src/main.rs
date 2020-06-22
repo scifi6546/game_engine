@@ -68,12 +68,11 @@ impl State {
         s.planet_system.new_entity(
             planets::Data::new(
                 || Some(1.0),
-                || Some(Vector3::new(0.0, 0.0, 0.0)),
+                || Some(Vector3::new(0.0, 0.0, 10.0)),
                 || Some(Vector3::new(0.0, 0.0, 0.0)),
                 || None,
             ),
             vec![
-                Box::new(planets::PrintPosition {}),
                 Box::new(planets::Gravity {}),
                 Box::new(planets::Renderable{}),
             ],
@@ -81,12 +80,11 @@ impl State {
         s.planet_system.new_entity(
             planets::Data::new(
                 || Some(1.0),
-                || Some(Vector3::new(1.0, 0.0, 0.0)),
+                || Some(Vector3::new(0.0, 0.0, -10.0)),
                 || Some(Vector3::new(0.0, 0.0, 0.0)),
                 || None,
             ),
             vec![
-                Box::new(planets::PrintPosition {}),
                 Box::new(planets::Gravity {}),
                 Box::new(planets::Renderable{}),
             ],
@@ -99,7 +97,6 @@ impl State {
                 || None,
             ),
             vec![
-                Box::new(planets::PrintPosition {}),
                 Box::new(planets::Gravity {}),
                 Box::new(planets::Renderable{}),
             ],
