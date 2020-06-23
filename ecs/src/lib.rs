@@ -9,7 +9,7 @@ macro_rules! create_entity {
         #[allow(dead_code)]
         #[derive(Clone)]
         pub struct Data{
-            $($element: Option<$ty>),*
+            $(pub $element: Option<$ty>),*
         }
         impl Data{
             #[allow(dead_code)]
@@ -47,7 +47,7 @@ macro_rules! create_entity {
             pub fn get_self(&self)->&Data{
                 self.data.get(&self.self_id).unwrap()
             }
-            pub fn get_other(&self,id:ID)->Option<Data>{
+            pub fn get(&self,id:ID)->Option<Data>{
                 if id!=self.self_id{
                     let t = self.data.get(&id).unwrap().clone();
                     Some(t)

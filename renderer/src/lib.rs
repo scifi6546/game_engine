@@ -1,11 +1,13 @@
 mod support;
+mod camera;
+pub use camera::Camera;
 pub use support::Model;
 use glutin::event::{Event, WindowEvent};
 use glutin::event_loop::{ControlFlow, EventLoop};
 use glutin::window::WindowBuilder;
 use glutin::ContextBuilder;
 pub trait Renderable{
-    fn render(&mut self)->Vec<Model>;
+    fn render(&mut self)->(Vec<Model>,Camera);
 }
 pub struct GraphicsState{
     gl:support::Gl,
@@ -42,13 +44,13 @@ fn _run<State:Renderable+'static>(
     event_loop:EventLoop<()>,
     window_context:glutin::ContextWrapper<glutin::PossiblyCurrent, glutin::window::Window>){
     let mut color = 0.0;
-    #[rustfmt::skip]
     let mut state = state_factory();
     event_loop.run(move |event, _, control_flow| {
-        let models = state.render();
+        let (models,camera) = state.render();
         gl.draw_frame(
             [color, color, color, 1.0],
-            models
+            models,
+            camera
         );
         window_context.swap_buffers().unwrap();
         match event {

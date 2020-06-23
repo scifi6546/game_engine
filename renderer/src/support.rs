@@ -1,5 +1,6 @@
 mod model;
 pub use model::Model;
+use crate::Camera;
 use glutin::{self, PossiblyCurrent};
 use nalgebra::{Matrix,Matrix4};
 use std::ffi::CString;
@@ -102,7 +103,6 @@ pub fn load(gl_context: &glutin::Context<PossiblyCurrent>) -> Gl {
         shader_program:shader_program,
     }
 }
-
 impl Gl {
     unsafe fn get_error(&self){
         let e = self.gl.GetError();
@@ -111,7 +111,7 @@ impl Gl {
 
         }
     }
-    pub fn draw_frame(&self, color: [f32; 4], model: Vec<Model>) {
+    pub fn draw_frame(&self, color: [f32; 4], model: Vec<Model>,camera:Camera) {
        // println!("drawing color: {}", color[0]);
         unsafe {
             self.gl.ClearColor(color[0],color[1],color[2],color[3]);
@@ -120,24 +120,24 @@ impl Gl {
             self.get_error();
 
             for m in model.iter(){
-                self.draw_model(m);
+                self.draw_model(m,&camera);
             }
         }
     }
-    unsafe fn draw_model(&self,model: &Model){
+    unsafe fn draw_model(&self,model: &Model,camera:&Camera){
             let translation_mat:Matrix4<f32> = Matrix::new_translation(&model.position);
             let translation_ptr = translation_mat.as_slice().as_ptr();
             let model_location = self.gl.GetUniformLocation(self.shader_program,CString::new("model").expect("failed??").as_ptr() as *const i8);
             self.gl.UniformMatrix4fv(model_location,1,gl::FALSE,translation_ptr);
 
 
-            let camera: Matrix4<f32> = nalgebra::Perspective3::new(1.0,3.14/4.0,1.0,1000.0).into_inner();
+            let projection_mat: Matrix4<f32> = nalgebra::Perspective3::new(1.0,camera.fov,1.0,1000.0).into_inner();
 
             let view_location = self.gl.GetUniformLocation(self.shader_program,CString::new("view").expect("failed??").as_ptr() as *const i8);
-            self.gl.UniformMatrix4fv(view_location,1,gl::FALSE,camera.as_slice().as_ptr());
+            self.gl.UniformMatrix4fv(view_location,1,gl::FALSE,projection_mat.as_slice().as_ptr());
 
-            let m3 = nalgebra::one::<Matrix4<f32>>();
-            let position_location = self.gl.GetUniformLocation(self.shader_program,CString::new("position_mat").expect("failed??").as_ptr() as *const i8);
+            let m3:Matrix4<f32> = nalgebra::Matrix::new_translation(&(-1.0*camera.position));
+            let position_location = self.gl.GetUniformLocation(self.shader_program,CString::new("camera_position").expect("failed??").as_ptr() as *const i8);
             self.gl.UniformMatrix4fv(position_location,1,gl::FALSE,m3.as_slice().as_ptr());
             self.get_error();
 
@@ -186,12 +186,12 @@ precision mediump float;
 attribute vec3 position;
 uniform mat4 model;
 uniform mat4 view;
-uniform mat4 position_mat;
+uniform mat4 camera_position;
 
 varying vec3 v_color;
 
 void main() {
-    gl_Position = view*position_mat*model*vec4(position, 1.0);
+    gl_Position = view*camera_position*model*vec4(position, 1.0);
     v_color = vec3(1.0,0.5,1.0);
 }
 \0";
