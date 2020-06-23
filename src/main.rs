@@ -23,7 +23,7 @@ mod planets {
     impl BehaviorComponent for PrintPosition {
         fn update(&mut self, data: &mut DataGetter) {
             let entity = data.get_self();
-            println!("position: {}", entity.position().unwrap());
+            println!("position: {}", entity.position.unwrap());
         }
     }
     pub struct Gravity {}
@@ -35,19 +35,19 @@ mod planets {
 
             for key in data.keys() {
                 if key.clone() != data.self_id() {
-                    let data_new = data.get(key.clone()).unwrap();
-                    let force_mag = (s_data.mass().unwrap() * data_new.mass.unwrap() * G)
-                        / (s_data.position().unwrap() - data_new.position.unwrap()).norm();
-                    force += ((data_new.position.unwrap() - s_data.position().unwrap())
+                    let data_new = data.get(key.clone());
+                    let force_mag = (s_data.mass.unwrap() * data_new.mass.unwrap() * G)
+                        / (s_data.position.unwrap() - data_new.position.unwrap()).norm();
+                    force += ((data_new.position.unwrap() - s_data.position.unwrap())
                         * force_mag)
-                        / (data_new.position.unwrap() - s_data.position().unwrap()).norm();
+                        / (data_new.position.unwrap() - s_data.position.unwrap()).norm();
                 }
             }
 
             let mut vel = data.get_self().velocity.unwrap().clone();
             vel += force * delta_time;
             data.velocity(vel);
-            let mut pos = data.get_self().position.unwrap();
+            let mut pos = data.get_self().position.unwrap().clone();
             pos += vel * delta_time;
             data.position(pos);
         }
@@ -65,7 +65,7 @@ mod planets {
     impl BehaviorComponent for ChildComponent {
         fn update(&mut self, data: &mut DataGetter) {
             let p = data.get_self().parent.clone().unwrap();
-            let parent = data.get(p.parent).unwrap().position.unwrap();
+            let parent = data.get(p.parent).position.unwrap();
             let pos = parent + p.relative_position;
             data.position(pos);
         }
@@ -73,7 +73,7 @@ mod planets {
     pub struct CameraComponent {}
     impl BehaviorComponent for CameraComponent {
         fn update(&mut self, data: &mut DataGetter) {
-            let pos = data.get_self().position.unwrap();
+            let pos = data.get_self().position.unwrap().clone();
             data.camera(Camera {
                 position: Vector3::new(pos.x as f32, pos.y as f32, pos.z as f32),
                 fov: 3.14 / 2.0,
@@ -147,13 +147,13 @@ impl Renderable for State {
             fov: 3.14 / 4.0,
         };
         for (id, data) in self.planet_system.iter() {
-            let model = data.model();
+            let model = data.model;
             if model.is_some() {
-                v.push(model.unwrap());
+                v.push(model.unwrap().clone());
             }
-            let c = data.camera();
+            let c = data.camera;
             if c.is_some() {
-                camera = c.unwrap();
+                camera = c.unwrap().clone();
             }
         }
         return (v, camera);
