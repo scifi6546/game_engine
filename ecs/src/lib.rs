@@ -4,8 +4,7 @@
 /// create entity with create_entity.
 #[macro_export]
 macro_rules! create_entity {
-    ($($element: ident: $ty: ty),*) => {
-
+    ($GlobalState: ty, $($element: ident: $ty: ty),*) => {
         #[allow(dead_code)]
         #[derive(Clone)]
         pub struct DataReturn<'a>{
@@ -36,7 +35,7 @@ macro_rules! create_entity {
         #[allow(dead_code)]
         pub trait BehaviorComponent{
             /// For now the user promises not to update id's other then the provided id
-            fn update(&mut self,data:&mut DataGetter);
+            fn update(&mut self,state: &mut $GlobalState,data:&mut DataGetter);
         }
         type ID = u32;
         #[allow(dead_code)]
@@ -108,11 +107,12 @@ macro_rules! create_entity {
             )*
             entities:std::collections::HashMap<ID,()>,
             behavior: std::collections::HashMap<ID,Vec<Box<dyn BehaviorComponent>>>,
+            global_state: $GlobalState,
         }
         use rand::Rng;
         impl EntityManager{
             #[allow(dead_code)]
-           pub fn new()->Self{
+           pub fn new(state:&$GlobalState)->Self{
                 EntityManager{
                 $(
                     $element: std::collections::HashMap::new(),
@@ -120,6 +120,7 @@ macro_rules! create_entity {
                 )*
                     entities: std::collections::HashMap::new(),
                     behavior: std::collections::HashMap::new(),
+                    global_state:state.clone(),
 
                 }
             }
@@ -179,7 +180,7 @@ macro_rules! create_entity {
             pub fn process(&mut self){
                 for (id,b_vec) in self.behavior.iter_mut(){
                     for b in b_vec.iter_mut(){
-                        b.update(
+                        b.update(&mut self.global_state,
                             &mut DataGetter{$($element:&mut self.$element,)*self_id:id.clone(),entities:&self.entities}
                             );
                     }
@@ -189,14 +190,14 @@ macro_rules! create_entity {
     }
 }
 mod test {
-    create_entity!(a: u32, b: f32);
+    create_entity!(u32,a: u32, b: f32);
     #[test]
     fn create_system() {
-        let s = EntityManager::new();
+        let s = EntityManager::new(&0);
     }
     #[test]
     fn create_entity() {
-        let mut s = EntityManager::new();
+        let mut s = EntityManager::new(&0);
         s.new_entity(Data::new(|| Some(0), || None), vec![]);
     }
 }

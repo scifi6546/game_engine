@@ -8,10 +8,17 @@ mod planets {
         pub parent: ID,
         pub relative_position: Vector3<f64>,
     }
+    #[derive(Clone)]
+    pub struct SceneDisplay{
+
+    }
     const G: f64 = 6.674e-11;
     use gl_renderer::{Camera, Model};
     use nalgebra::Vector3;
+    #[derive(Clone)]
+    pub struct GlobalState{}
     create_entity!(
+        GlobalState,
         mass: f64,
         position: Vector3<f64>,
         velocity: Vector3<f64>,
@@ -21,14 +28,14 @@ mod planets {
     );
     pub struct PrintPosition {}
     impl BehaviorComponent for PrintPosition {
-        fn update(&mut self, data: &mut DataGetter) {
+        fn update(&mut self,state: &mut GlobalState, data: &mut DataGetter) {
             let entity = data.get_self();
             println!("position: {}", entity.position.unwrap());
         }
     }
     pub struct Gravity {}
     impl BehaviorComponent for Gravity {
-        fn update(&mut self, data: &mut DataGetter) {
+        fn update(&mut self,state: &mut GlobalState, data: &mut DataGetter) {
             let delta_time = 10.0;
             let mut force = Vector3::new(0.0, 0.0, 0.0);
             let s_data = data.get_self();
@@ -54,7 +61,7 @@ mod planets {
     }
     pub struct Renderable {}
     impl BehaviorComponent for Renderable {
-        fn update(&mut self, data: &mut DataGetter) {
+        fn update(&mut self,state: &mut GlobalState, data: &mut DataGetter) {
             let pos = data.get_self().position.unwrap();
             let model = Model::cube(Vector3::new(pos.x as f32, pos.y as f32, pos.z as f32));
             data.model(model);
@@ -63,7 +70,7 @@ mod planets {
     pub struct ChildComponent {}
 
     impl BehaviorComponent for ChildComponent {
-        fn update(&mut self, data: &mut DataGetter) {
+        fn update(&mut self, state: &mut GlobalState, data: &mut DataGetter) {
             let p = data.get_self().parent.clone().unwrap();
             let parent = data.get(p.parent).position.unwrap();
             let pos = parent + p.relative_position;
@@ -72,7 +79,7 @@ mod planets {
     }
     pub struct CameraComponent {}
     impl BehaviorComponent for CameraComponent {
-        fn update(&mut self, data: &mut DataGetter) {
+        fn update(&mut self,state: &mut GlobalState, data: &mut DataGetter) {
             let pos = data.get_self().position.unwrap().clone();
             data.camera(Camera {
                 position: Vector3::new(pos.x as f32, pos.y as f32, pos.z as f32),
@@ -108,7 +115,7 @@ fn new_planet(
 impl State {
     pub fn new() -> Self {
         let mut s = State {
-            planet_system: planets::EntityManager::new(),
+            planet_system: planets::EntityManager::new(&planets::GlobalState{}),
         };
         let (d, p1) = new_planet(Vector3::new(0.0, 0.0, 10.0));
         s.planet_system.new_entity(d, p1);
