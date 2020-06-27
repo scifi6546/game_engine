@@ -1,18 +1,20 @@
 mod support;
 mod camera;
 pub use camera::Camera;
-pub use support::Model;
+pub use support::{Model,Image};
 use glutin::event::{Event, WindowEvent};
 use glutin::event_loop::{ControlFlow, EventLoop};
 use glutin::window::WindowBuilder;
 use glutin::ContextBuilder;
+use std::collections::HashMap;
+
 pub trait Renderable{
     fn render(&mut self)->(Vec<Model>,Camera);
 }
 pub struct GraphicsState{
     gl:support::Gl,
     event_loop:EventLoop<()>,
-    window_context:glutin::ContextWrapper<glutin::PossiblyCurrent, glutin::window::Window>
+    window_context:glutin::ContextWrapper<glutin::PossiblyCurrent, glutin::window::Window>,
 }
 pub fn init()->GraphicsState {
     let el = EventLoop::new();
@@ -26,7 +28,8 @@ pub fn init()->GraphicsState {
         windowed_context.get_pixel_format()
     );
 
-    let gl = support::load(&windowed_context.context());
+    let mut gl = support::load(&windowed_context.context());
+    gl.new_texture("./textures/planet.png");
     return GraphicsState{
         gl:gl,
         event_loop:el,
@@ -43,25 +46,25 @@ fn _run<State:Renderable+'static>(
     gl:support::Gl,
     event_loop:EventLoop<()>,
     window_context:glutin::ContextWrapper<glutin::PossiblyCurrent, glutin::window::Window>){
-    let mut color = 0.0;
-    let mut state = state_factory();
-    event_loop.run(move |event, _, control_flow| {
-        let (models,camera) = state.render();
-        gl.draw_frame(
-            [color, color, color, 1.0],
-            models,
-            camera
-        );
-        window_context.swap_buffers().unwrap();
-        match event {
-            Event::LoopDestroyed => return,
-            Event::WindowEvent { event, .. } => match event {
-                WindowEvent::Resized(physical_size) => window_context.resize(physical_size),
-                WindowEvent::CloseRequested => *control_flow = ControlFlow::Exit,
+        let mut color = 0.0;
+        let mut state = state_factory();
+        event_loop.run(move |event, _, control_flow| {
+            let (models,camera) = state.render();
+            gl.draw_frame(
+                [color, color, color, 1.0],
+                models,
+                camera
+            );
+            window_context.swap_buffers().unwrap();
+            match event {
+                Event::LoopDestroyed => return,
+                Event::WindowEvent { event, .. } => match event {
+                    WindowEvent::Resized(physical_size) => window_context.resize(physical_size),
+                    WindowEvent::CloseRequested => *control_flow = ControlFlow::Exit,
+                    _ => (),
+                },
+                Event::RedrawRequested(_) => {}
                 _ => (),
-            },
-            Event::RedrawRequested(_) => {}
-            _ => (),
-        }
-    });
+            }
+        });
 }

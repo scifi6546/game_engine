@@ -4,6 +4,7 @@ use crate::Camera;
 use glutin::{self, PossiblyCurrent};
 use nalgebra::{Matrix,Matrix4};
 use std::ffi::CString;
+use std::collections::HashMap;
 
 use std::ffi::CStr;
 pub mod gl {
@@ -17,6 +18,12 @@ pub struct Gl {
     element_buffer_object:u32,
     vertex_attribute_array: u32,
     shader_program:u32,
+    textures:HashMap<u32,Image>,
+}
+pub struct Image{
+    texture_num: u32,
+
+
 }
 
 pub fn load(gl_context: &glutin::Context<PossiblyCurrent>) -> Gl {
@@ -101,6 +108,7 @@ pub fn load(gl_context: &glutin::Context<PossiblyCurrent>) -> Gl {
         element_buffer_object: element_buffer_object,
         vertex_attribute_array: vertex_attribute_array,
         shader_program:shader_program,
+        textures: HashMap::new(),
     }
 }
 impl Gl {
@@ -110,6 +118,33 @@ impl Gl {
             println!("gl error: {}",e);
 
         }
+    }
+    pub fn new_texture(&mut self,file_name: &str)->u32{
+       unsafe{
+       let img_dyn = image::open(file_name).ok().unwrap(); 
+       let img = img_dyn.as_rgba8().unwrap();
+
+           let mut texture_num = 0;
+            self.gl.GenTextures(1,&mut texture_num);
+            self.gl.BindTexture(gl::TEXTURE_2D,texture_num);
+            self.gl.TexImage2D(gl::TEXTURE_2D,0,gl::RGBA as i32,img.width() as i32,img.height() as i32,0,gl::RGBA,gl::UNSIGNED_BYTE,img.to_vec().as_mut_ptr() as *const std::ffi::c_void);
+            self.gl.GenerateMipmap(gl::TEXTURE_2D);
+            self.gl.BindTexture(gl::TEXTURE_2D,texture_num);
+            let key = self.get_texture_id();
+            self.get_error();
+            self.textures.insert(key,Image{texture_num:texture_num});
+            return key;
+       }
+    }
+    fn get_texture_id(&self)->u32{
+        for i in 0..{
+            if self.textures.contains_key(&i)==false{
+                return i
+
+            }
+        }
+        return 0;
+
     }
     pub fn draw_frame(&self, color: [f32; 4], model: Vec<Model>,camera:Camera) {
        // println!("drawing color: {}", color[0]);
